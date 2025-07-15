@@ -10,17 +10,20 @@
 
 
 # 基础配置
-PLATFORM = "xhs"
-KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+PLATFORM = ""
+KEYWORDS = ""  # 关键词搜索配置，以英文逗号分隔
+LOGIN_TYPE = "cookie"  # qrcode or phone or cookie
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
+# 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 CRAWLER_TYPE = (
-    "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+    "detail"
 )
+# 微博搜索类型 default (综合) | real_time (实时) | popular (热门) | video (视频)
+WEIBO_SEARCH_TYPE = "popular"
 # 自定义User Agent（暂时仅对XHS有效）
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
 
@@ -40,7 +43,7 @@ IP_PROXY_PROVIDER_NAME = "kuaidaili"
 # 设置False会打开一个浏览器
 # 小红书如果一直扫码登录不通过，打开浏览器手动过一下滑动验证码
 # 抖音如果一直提示失败，打开浏览器看下是否扫码登录之后出现了手机号验证，如果出现了手动过一下再试。
-HEADLESS = False
+HEADLESS = True
 
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
@@ -75,6 +78,9 @@ AUTO_CLOSE_BROWSER = True
 # 数据保存类型选项配置,支持三种类型：csv、db、json, 最好保存到DB，有排重的功能。
 SAVE_DATA_OPTION = "json"  # csv or db or json
 
+# 新增：自定义保存文件名时间戳部分（无扩展名）
+SAVE_FILE_TIMESTAMP = None
+
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
@@ -82,7 +88,7 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 START_PAGE = 1
 
 # 爬取视频/帖子的数量控制
-CRAWLER_MAX_NOTES_COUNT = 200
+CRAWLER_MAX_NOTES_COUNT = 10
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
@@ -91,7 +97,7 @@ MAX_CONCURRENCY_NUM = 1
 ENABLE_GET_IMAGES = False
 
 # 是否开启爬评论模式, 默认开启爬评论
-ENABLE_GET_COMMENTS = True
+ENABLE_GET_COMMENTS = False
 
 # 爬取一级评论的数量控制(单视频/帖子)
 CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
@@ -109,37 +115,39 @@ ENABLE_GET_SUB_COMMENTS = False
 
 # 指定小红书需要爬虫的笔记URL列表, 目前要携带xsec_token和xsec_source参数
 XHS_SPECIFIED_NOTE_URL_LIST = [
-    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
+    # "https://www.xiaohongshu.com/explore/6868982f0000000012033333?xsec_token=ABxukEuY3D5B1akPP4Pb5OGCstQufnAM71Li0wrRthX-M=&xsec_source=pc_feed"
     # ........................
 ]
 
 # 指定抖音需要爬取的ID列表
 DY_SPECIFIED_ID_LIST = [
-    "7280854932641664319",
-    "7202432992642387233",
+    # "7280854932641664319",
+    # "7202432992642387233",
     # ........................
 ]
 
 # 指定快手平台需要爬取的ID列表
-KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
+KS_SPECIFIED_ID_LIST = [
+    # "3xf8enb8dbj6uig", "3x6zz972bchmvqe"
+    ]
 
 # 指定B站平台需要爬取的视频bvid列表
 BILI_SPECIFIED_ID_LIST = [
-    "BV1d54y1g7db",
-    "BV1Sz4y1U77N",
-    "BV14Q4y1n7jz",
+    # "BV1d54y1g7db",
+    # "BV1Sz4y1U77N",
+    # "BV14Q4y1n7jz",
     # ........................
 ]
 
 # 指定微博平台需要爬取的帖子列表
 WEIBO_SPECIFIED_ID_LIST = [
-    "4982041758140155",
+    # "5188052949668228",
     # ........................
 ]
 
-# 指定weibo创作者ID列表
+# 指定微博平台创作者ID列表
 WEIBO_CREATOR_ID_LIST = [
-    "5533390220",
+    # "6037906900",
     # ........................
 ]
 
@@ -153,46 +161,46 @@ TIEBA_NAME_LIST = [
 
 # 指定贴吧创作者URL列表
 TIEBA_CREATOR_URL_LIST = [
-    "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
+    # "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................
 ]
 
 # 指定小红书创作者ID列表
 XHS_CREATOR_ID_LIST = [
-    "63e36c9a000000002703502b",
+    # "63e36c9a000000002703502b",
     # ........................
 ]
 
 # 指定Dy创作者ID列表(sec_id)
 DY_CREATOR_ID_LIST = [
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
 
 # 指定bili创作者ID列表(sec_id)
 BILI_CREATOR_ID_LIST = [
-    "20813884",
+    # "1575688490",
     # ........................
 ]
 
 # 指定快手创作者ID列表
 KS_CREATOR_ID_LIST = [
-    "3x4sm73aye7jq7i",
+    # "3x4sm73aye7jq7i",
     # ........................
 ]
 
 
 # 指定知乎创作者主页url列表
 ZHIHU_CREATOR_URL_LIST = [
-    "https://www.zhihu.com/people/yd1234567",
+    # "https://www.zhihu.com/people/yd1234567",
     # ........................
 ]
 
 # 指定知乎需要爬取的帖子ID列表
 ZHIHU_SPECIFIED_ID_LIST = [
-    "https://www.zhihu.com/question/826896610/answer/4885821440",  # 回答
-    "https://zhuanlan.zhihu.com/p/673461588",  # 文章
-    "https://www.zhihu.com/zvideo/1539542068422144000",  # 视频
+    # "https://www.zhihu.com/question/826896610/answer/4885821440",  # 回答
+    # "https://zhuanlan.zhihu.com/p/673461588",  # 文章
+    # "https://www.zhihu.com/zvideo/1539542068422144000",  # 视频
 ]
 
 # 词云相关
@@ -230,7 +238,7 @@ CREATOR_MODE = True
 START_CONTACTS_PAGE = 1
 
 # 爬取作者粉丝和关注列表数量控制(单作者)
-CRAWLER_MAX_CONTACTS_COUNT_SINGLENOTES = 100
+CRAWLER_MAX_CONTACTS_COUNT_SINGLENOTES = 1
 
 # 爬取作者动态数量控制(单作者)
-CRAWLER_MAX_DYNAMICS_COUNT_SINGLENOTES = 50
+CRAWLER_MAX_DYNAMICS_COUNT_SINGLENOTES = 1

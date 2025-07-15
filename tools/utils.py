@@ -11,6 +11,7 @@
 
 import argparse
 import logging
+from datetime import datetime
 
 from .crawler_util import *
 from .slider_util import *
@@ -40,3 +41,10 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def get_current_datetime_str():
+    """
+    获取当前时间字符串，格式为：yyyymmddhh24miss，精确到秒
+    """
+    return datetime.now().strftime("%Y%m%d%H%M%S")

@@ -18,8 +18,8 @@ from tools.utils import str2bool
 async def parse_cmd():
     # 读取command arg
     parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | wb | tieba | zhihu)',
-                        choices=["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu"], default=config.PLATFORM)
+    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | weibo | tieba | zhihu)',
+                        choices=["xhs", "dy", "ks", "bili", "weibo", "tieba", "zhihu"], default=config.PLATFORM)
     parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
     parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
@@ -36,6 +36,14 @@ async def parse_cmd():
                         help='where to save the data (csv or db or json)', choices=['csv', 'db', 'json'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--cookies', type=str,
                         help='cookies used for cookie login type', default=config.COOKIES)
+    parser.add_argument('--save_file_timestamp', type=str,
+                        help='custom save file timestamp (without extension)', default=None)
+    parser.add_argument('--creator_id_list', type=str,
+                        help='creator id list, comma separated, will override config.<PLATFORM>_CREATOR_ID_LIST', default=None)
+    parser.add_argument('--specified_id_list', type=str,
+                        help='specified id list, comma separated, will override config.<PLATFORM>_SPECIFIED_ID_LIST', default=None)
+    parser.add_argument('--headless', type=str2bool,
+                        help='whether to use headless browser mode', default=True)
 
     args = parser.parse_args()
 
@@ -49,3 +57,37 @@ async def parse_cmd():
     config.ENABLE_GET_SUB_COMMENTS = args.get_sub_comment
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
+    config.SAVE_FILE_TIMESTAMP = args.save_file_timestamp
+    config.HEADLESS = args.headless
+
+    # 自动适配平台 CREATOR_ID_LIST 字段
+    if args.creator_id_list:
+        platform_field_map = {
+            'tieba': 'TIEBA_CREATOR_URL_LIST',
+            'xhs': 'XHS_CREATOR_ID_LIST',
+            'dy': 'DY_CREATOR_ID_LIST',
+            'bili': 'BILI_CREATOR_ID_LIST',
+            'ks': 'KS_CREATOR_ID_LIST',
+            'zhihu': 'ZHIHU_CREATOR_URL_LIST',
+            'weibo': 'WEIBO_CREATOR_ID_LIST',
+        }
+        field = platform_field_map.get(args.platform)
+        id_list = [i.strip() for i in args.creator_id_list.split(',') if i.strip()]
+        if field and hasattr(config, field):
+            setattr(config, field, id_list)
+
+    # 自动适配平台 SPECIFIED_ID_LIST 字段
+    if args.specified_id_list:
+        specified_field_map = {
+            'tieba': 'TIEBA_SPECIFIED_ID_LIST',
+            'xhs': 'XHS_SPECIFIED_NOTE_URL_LIST',
+            'dy': 'DY_SPECIFIED_ID_LIST',
+            'bili': 'BILI_SPECIFIED_ID_LIST',
+            'ks': 'KS_SPECIFIED_ID_LIST',
+            'zhihu': 'ZHIHU_SPECIFIED_ID_LIST',
+            'weibo': 'WEIBO_SPECIFIED_ID_LIST',
+        }
+        field = specified_field_map.get(args.platform)
+        id_list = [i.strip() for i in args.specified_id_list.split(',') if i.strip()]
+        if field and hasattr(config, field):
+            setattr(config, field, id_list)

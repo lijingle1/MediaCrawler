@@ -32,7 +32,7 @@ class CrawlerFactory:
         "dy": DouYinCrawler,
         "ks": KuaishouCrawler,
         "bili": BilibiliCrawler,
-        "wb": WeiboCrawler,
+        "weibo": WeiboCrawler,
         "tieba": TieBaCrawler,
         "zhihu": ZhihuCrawler
     }

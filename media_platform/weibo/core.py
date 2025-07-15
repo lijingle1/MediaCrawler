@@ -124,6 +124,20 @@ class WeiboCrawler(AbstractCrawler):
         if config.CRAWLER_MAX_NOTES_COUNT < weibo_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = weibo_limit_count
         start_page = config.START_PAGE
+
+        # Set the search type based on the configuration for weibo
+        if config.WEIBO_SEARCH_TYPE == "default":
+            search_type = SearchType.DEFAULT
+        elif config.WEIBO_SEARCH_TYPE == "real_time":
+            search_type = SearchType.REAL_TIME
+        elif config.WEIBO_SEARCH_TYPE == "popular":
+            search_type = SearchType.POPULAR
+        elif config.WEIBO_SEARCH_TYPE == "video":
+            search_type = SearchType.VIDEO
+        else:
+            utils.logger.error(f"[WeiboCrawler.search] Invalid WEIBO_SEARCH_TYPE: {config.WEIBO_SEARCH_TYPE}")
+            return
+
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
@@ -137,17 +151,24 @@ class WeiboCrawler(AbstractCrawler):
                 search_res = await self.wb_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,
-                    search_type=SearchType.DEFAULT
+                    search_type=search_type
                 )
                 note_id_list: List[str] = []
-                note_list = filter_search_result_card(search_res.get("cards"))
+                cards = search_res.get("cards")
+                if not isinstance(cards, list):
+                    cards = []
+                note_list = filter_search_result_card(cards)
                 for note_item in note_list:
-                    if note_item:
-                        mblog: Dict = note_item.get("mblog")
-                        if mblog:
-                            note_id_list.append(mblog.get("id"))
-                            await weibo_store.update_weibo_note(note_item)
-                            await self.get_note_images(mblog)
+                    if not isinstance(note_item, dict):
+                        continue
+                    mblog = note_item.get("mblog")
+                    if not isinstance(mblog, dict):
+                        continue
+                    note_id = mblog.get("id")
+                    if isinstance(note_id, str):
+                        note_id_list.append(note_id)
+                        await weibo_store.update_weibo_note(note_item)
+                        await self.get_note_images(mblog)
 
                 page += 1
                 await self.batch_get_notes_comments(note_id_list)
@@ -236,17 +257,21 @@ class WeiboCrawler(AbstractCrawler):
             utils.logger.info(f"[WeiboCrawler.get_note_images] Crawling image mode is not enabled")
             return
         
-        pics: Dict = mblog.get("pics")
-        if not pics:
+        pics = mblog.get("pics")
+        if not isinstance(pics, list):
             return
         for pic in pics:
+            if not isinstance(pic, dict):
+                continue
             url = pic.get("url")
-            if not url:
+            if not isinstance(url, str) or not url:
                 continue
             content = await self.wb_client.get_note_image(url)
-            if content != None:
+            if content is not None:
                 extension_file_name = url.split(".")[-1]
-                await weibo_store.update_weibo_note_image(pic["pid"], content, extension_file_name)
+                picid = pic.get("pid")
+                if isinstance(picid, str):
+                    await weibo_store.update_weibo_note_image(picid, content, extension_file_name)
 
 
     async def get_creators_and_notes(self) -> None:
@@ -265,12 +290,17 @@ class WeiboCrawler(AbstractCrawler):
                     raise DataFetchError("Get creator info error")
                 await weibo_store.save_creator(user_id, user_info=createor_info)
 
+                container_id = createor_info_res.get("lfid_container_id")
+                if not isinstance(container_id, str) or not container_id:
+                    utils.logger.error(f"[WeiboCrawler.get_creators_and_notes] Invalid container_id for creator_id:{user_id}, skip.")
+                    continue
                 # Get all note information of the creator
                 all_notes_list = await self.wb_client.get_all_notes_by_creator_id(
                     creator_id=user_id,
-                    container_id=createor_info_res.get("lfid_container_id"),
+                    container_id=container_id,
                     crawl_interval=0,
-                    callback=weibo_store.batch_update_weibo_notes
+                    callback=weibo_store.batch_update_weibo_notes,
+                    max_count=config.CRAWLER_MAX_NOTES_COUNT
                 )
 
                 note_ids = [note_item.get("mblog", {}).get("id") for note_item in all_notes_list if

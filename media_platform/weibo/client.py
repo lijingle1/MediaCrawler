@@ -338,7 +338,7 @@ class WeiboClient:
         return await self.get(uri, params)
 
     async def get_all_notes_by_creator_id(self, creator_id: str, container_id: str, crawl_interval: float = 1.0,
-                                          callback: Optional[Callable] = None) -> List[Dict]:
+                                          callback: Optional[Callable] = None, max_count: int = 10) -> List[Dict]:
         """
         获取指定用户下的所有发过的帖子，该方法会一直查找一个用户下的所有帖子信息
         Args:
@@ -346,7 +346,7 @@ class WeiboClient:
             container_id:
             crawl_interval:
             callback:
-
+            max_count: 最大数量限制
         Returns:
 
         """
@@ -354,7 +354,7 @@ class WeiboClient:
         notes_has_more = True
         since_id = ""
         crawler_total_count = 0
-        while notes_has_more:
+        while notes_has_more and len(result) < max_count:
             notes_res = await self.get_notes_by_creator(creator_id, container_id, since_id)
             if not notes_res:
                 utils.logger.error(
@@ -370,11 +370,15 @@ class WeiboClient:
             utils.logger.info(
                 f"[WeiboClient.get_all_notes_by_creator] got user_id:{creator_id} notes len : {len(notes)}")
             notes = [note for note  in notes if note.get("card_type") == 9]
+            remaining = max_count - len(result)
+            if remaining <= 0:
+                break
+            notes_to_add = notes[:remaining]
             if callback:
-                await callback(notes)
+                await callback(notes_to_add)
             await asyncio.sleep(crawl_interval)
-            result.extend(notes)
-            crawler_total_count += 10
-            notes_has_more = notes_res.get("cardlistInfo", {}).get("total", 0) > crawler_total_count
+            result.extend(notes_to_add)
+            crawler_total_count += len(notes_to_add)
+            notes_has_more = notes_res.get("cardlistInfo", {}).get("total", 0) > crawler_total_count and len(notes_to_add) > 0
         return result
 

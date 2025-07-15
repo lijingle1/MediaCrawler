@@ -49,15 +49,10 @@ class WeiboCsvStoreImplement(AbstractStore):
 
     def make_save_file_name(self, store_type: str) -> str:
         """
-        make save file name by store type
-        Args:
-            store_type: contents or comments
-
-        Returns: eg: data/bilibili/search_comments_20240114.csv ...
-
+        新命名规则：data/weibo/爬虫类型_数据类型_时间戳.csv
         """
-
-        return f"{self.csv_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.csv"
+        ts = config.SAVE_FILE_TIMESTAMP if config.SAVE_FILE_TIMESTAMP else utils.get_current_datetime_str()
+        return f"{self.csv_store_path}/{crawler_type_var.get()}_{store_type}_{ts}.csv"
 
     async def save_data_to_csv(self, save_item: Dict, store_type: str):
         """
@@ -185,17 +180,12 @@ class WeiboJsonStoreImplement(AbstractStore):
 
     def make_save_file_name(self, store_type: str) -> (str, str):
         """
-        make save file name by store type
-        Args:
-            store_type: Save type contains content and comments（contents | comments）
-
-        Returns:
-
+        新命名规则：data/weibo/json/爬虫类型_数据类型_时间戳.json
         """
-
+        ts = config.SAVE_FILE_TIMESTAMP if config.SAVE_FILE_TIMESTAMP else utils.get_current_datetime_str()
         return (
-            f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json",
-            f"{self.words_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}"
+            f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{ts}.json",
+            f"{self.words_store_path}/{crawler_type_var.get()}_{store_type}_{ts}"
         )
 
     async def save_data_to_json(self, save_item: Dict, store_type: str):

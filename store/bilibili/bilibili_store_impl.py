@@ -54,7 +54,8 @@ class BiliCsvStoreImplement(AbstractStore):
         Returns: eg: data/bilibili/search_comments_20240114.csv ...
 
         """
-        return f"{self.csv_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.csv"
+        ts = config.SAVE_FILE_TIMESTAMP if config.SAVE_FILE_TIMESTAMP else utils.get_current_datetime_str()
+        return f"{self.csv_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{ts}.csv"
 
     async def save_data_to_csv(self, save_item: Dict, store_type: str):
         """
@@ -250,7 +251,6 @@ class BiliJsonStoreImplement(AbstractStore):
     file_count:int=calculate_number_of_files(json_store_path)
     WordCloud = words.AsyncWordCloudGenerator()
 
-
     def make_save_file_name(self, store_type: str) -> (str,str):
         """
         make save file name by store type
@@ -260,10 +260,10 @@ class BiliJsonStoreImplement(AbstractStore):
         Returns:
 
         """
-
+        ts = config.SAVE_FILE_TIMESTAMP if config.SAVE_FILE_TIMESTAMP else utils.get_current_datetime_str()
         return (
-            f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json",
-            f"{self.words_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}"
+            f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{ts}.json",
+            f"{self.words_store_path}/{crawler_type_var.get()}_{store_type}_{ts}"
         )
 
     async def save_data_to_json(self, save_item: Dict, store_type: str):
