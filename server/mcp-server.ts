@@ -134,10 +134,11 @@ server.registerTool(
                 result[file] = { error: `读取或解析失败: ${e}` };
                 console.error(`[runCrawler] 读取或解析失败: ${filePath}`, e);
               }
+              // console.log(result)
             }
             resolve({
               content: [
-                { type: "text", text: `命令: ${fullCmd}\n爬虫已完成，文件内容如下：\n${JSON.stringify(result, null, 2)}` }
+                { type: "text", text: `${JSON.stringify(result, null, 2)}` }
               ]
             });
           } catch (e) {
