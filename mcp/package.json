@@ -4,7 +4,7 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "start": "npx tsx index.ts",
+    "start": "npx -y tsx index.ts",
     "inspect": "npx -y @modelcontextprotocol/inspector"
   },
   "dependencies": {
