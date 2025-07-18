@@ -10,6 +10,20 @@ import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import moment from "moment";
 import fs from "fs";
 import express from "express";
+
+const AUTH_TOKENS = ["alarm-mng-service-online"];
+
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
+  }
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  if (!AUTH_TOKENS.includes(token)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+  next();
+}
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -157,23 +171,46 @@ server.registerTool(
 // 3. 启动 MCP HTTP/SSE 服务
 const app = express();
 app.use(express.json());
+app.use(authMiddleware);
 
 const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: () => randomUUID(),
 });
 
+// 封装响应内容打印
+function wrapResWithLogging(req, res) {
+  const method = req && req.method ? req.method : 'UNKNOWN';
+  const oldSend = res.send;
+  const oldJson = res.json;
+  const oldEnd = res.end;
+  res.send = function (...args) {
+    console.log(`[${method}][response][send]`, ...args);
+    return oldSend.apply(res, args);
+  };
+  res.json = function (...args) {
+    console.log(`[${method}][response][json]`, ...args);
+    return oldJson.apply(res, args);
+  };
+  res.end = function (...args) {
+    console.log(`[${method}][response][end]`, ...args);
+    return oldEnd.apply(res, args);
+  };
+}
 // POST: 客户端请求
 app.post('/mcp', async (req, res) => {
-  console.error('mcp post:', req.body)
+  console.log('mcp post:', req.body)
+  wrapResWithLogging(req, res);
   await transport.handleRequest(req, res, req.body);
 });
 // GET: SSE 事件流
 app.get('/mcp', async (req, res) => {
-  console.error('mcp get:', req.body)
+  console.log('mcp get:', req.body)
+  wrapResWithLogging(req, res);
   await transport.handleRequest(req, res);
 });
 // DELETE: 关闭 session
 app.delete('/mcp', async (req, res) => {
+  wrapResWithLogging(req, res);
   await transport.handleRequest(req, res);
 });
 

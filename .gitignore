@@ -170,4 +170,5 @@ cython_debug/
 .vscode
 /node_modules
 /server/node_modules
+/mcp/node_modules
 docs/.vitepress/cache
