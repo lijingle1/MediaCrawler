@@ -42,6 +42,8 @@ async def parse_cmd():
                         help='creator id list, comma separated, will override config.<PLATFORM>_CREATOR_ID_LIST', default=None)
     parser.add_argument('--specified_id_list', type=str,
                         help='specified id list, comma separated, will override config.<PLATFORM>_SPECIFIED_ID_LIST', default=None)
+    parser.add_argument('--crawler_max_notes_count', type=int,
+                        help='limit of notes/posts to crawl', default=config.CRAWLER_MAX_NOTES_COUNT)
     parser.add_argument('--headless', type=str2bool,
                         help='whether to use headless browser mode', default=True)
 
@@ -58,6 +60,7 @@ async def parse_cmd():
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
     config.SAVE_FILE_TIMESTAMP = args.save_file_timestamp
+    config.CRAWLER_MAX_NOTES_COUNT = args.crawler_max_notes_count
     config.HEADLESS = args.headless
 
     # 自动适配平台 CREATOR_ID_LIST 字段

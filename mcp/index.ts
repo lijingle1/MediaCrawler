@@ -101,6 +101,11 @@ const RUN_CRAWLER_TOOL: Tool = {
           description: "指定ID列表，可选",
           default: ""
         },
+        crawler_max_notes_count: {
+          type: "string",
+          description: "爬取视频/帖子的数量控制，默认10",
+          default: "10"
+        },
         headless: {
           type: "boolean",
           description: "是否headless模式，默认true",
@@ -163,6 +168,7 @@ async function runCrawler(args) {
       cookies: "--cookies",
       creator_id_list: "--creator_id_list",
       specified_id_list: "--specified_id_list",
+      crawler_max_notes_count: "--crawler_max_notes_count",
       headless: "--headless",
     };
     const pyArgs: string[] = [];
