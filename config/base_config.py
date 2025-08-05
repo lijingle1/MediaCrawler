@@ -48,6 +48,11 @@ HEADLESS = True
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
 
+# 是否自动关闭抖音登录对话框
+# 设置为True时，访问抖音网站后会自动尝试关闭弹出的登录框
+# 设置为False时，保持原有行为（弹出登录框）
+AUTO_CLOSE_DOUYIN_LOGIN_DIALOG = True
+
 # ==================== CDP (Chrome DevTools Protocol) 配置 ====================
 # 是否启用CDP模式 - 使用用户现有的Chrome/Edge浏览器进行爬取，提供更好的反检测能力
 # 启用后将自动检测并启动用户的Chrome/Edge浏览器，通过CDP协议进行控制

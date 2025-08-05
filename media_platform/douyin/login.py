@@ -46,6 +46,12 @@ class DouYinLogin(AbstractLogin):
             Start login douyin website
             滑块中间页面的验证准确率不太OK... 如果没有特俗要求，建议不开抖音登录，或者使用cookies登录
         """
+        
+        # 如果登录类型是none，则只关闭登录对话框，不进行实际登录
+        if config.LOGIN_TYPE == "none":
+            utils.logger.info("[DouYinLogin.begin] Login type is 'none', only closing login dialog if exists...")
+            await self.check_and_close_login_dialog()
+            return
 
         # popup login dialog
         await self.popup_login_dialog()
@@ -263,3 +269,109 @@ class DouYinLogin(AbstractLogin):
                 'domain': ".douyin.com",
                 'path': "/"
             }])
+
+    async def close_login_dialog(self):
+        """
+        关闭抖音登录对话框
+        Close the Douyin login dialog box
+        """
+        utils.logger.info("[DouYinLogin.close_login_dialog] Attempting to close login dialog...")
+        
+        # 常见的登录框关闭按钮选择器
+        close_selectors = [
+            "xpath=//div[@id='login-panel-new']//div[contains(@class, 'close') or contains(@class, 'Close')]",  # 通用关闭按钮
+            "xpath=//div[@id='login-panel-new']//span[contains(@class, 'close') or contains(@class, 'Close')]",  # span关闭按钮
+            "xpath=//div[@id='login-panel-new']//button[contains(@class, 'close') or contains(@class, 'Close')]",  # button关闭按钮
+            "xpath=//div[@id='login-panel-new']//*[text()='×' or text()='✕' or text()='关闭']",  # 文本关闭按钮
+            "xpath=//div[contains(@class, 'login') and contains(@class, 'modal')]//div[contains(@class, 'close')]",  # 模态框关闭按钮
+            "xpath=//div[contains(@class, 'login') and contains(@class, 'dialog')]//div[contains(@class, 'close')]",  # 对话框关闭按钮
+            "xpath=//div[contains(@class, 'login-modal')]//div[contains(@class, 'close')]",  # 登录模态框关闭按钮
+            "css=.login-panel .close",  # CSS选择器
+            "css=.login-modal .close",  # CSS选择器
+            "css=[data-testid='close-button']",  # 测试ID选择器
+        ]
+        
+        # 尝试点击关闭按钮
+        for selector in close_selectors:
+            try:
+                # 等待元素出现，超时时间设为2秒
+                await self.context_page.wait_for_selector(selector, timeout=2000)
+                close_button = self.context_page.locator(selector)
+                
+                # 检查元素是否可见和可点击
+                if await close_button.is_visible():
+                    await close_button.click()
+                    utils.logger.info(f"[DouYinLogin.close_login_dialog] Successfully clicked close button with selector: {selector}")
+                    await asyncio.sleep(1)  # 等待对话框关闭动画完成
+                    return True
+                    
+            except Exception as e:
+                # 如果当前选择器没找到元素，继续尝试下一个
+                continue
+        
+        # 如果找不到关闭按钮，尝试按ESC键关闭
+        try:
+            utils.logger.info("[DouYinLogin.close_login_dialog] No close button found, trying ESC key...")
+            await self.context_page.keyboard.press('Escape')
+            await asyncio.sleep(1)
+            utils.logger.info("[DouYinLogin.close_login_dialog] Pressed ESC key to close dialog")
+            return True
+        except Exception as e:
+            utils.logger.error(f"[DouYinLogin.close_login_dialog] Failed to press ESC key: {e}")
+        
+        # 如果ESC键也不行，尝试点击对话框外部区域关闭
+        try:
+            utils.logger.info("[DouYinLogin.close_login_dialog] Trying to click outside dialog to close...")
+            # 点击页面左上角（通常在对话框外部）
+            await self.context_page.click('body', position={'x': 50, 'y': 50})
+            await asyncio.sleep(1)
+            utils.logger.info("[DouYinLogin.close_login_dialog] Clicked outside dialog area")
+            return True
+        except Exception as e:
+            utils.logger.error(f"[DouYinLogin.close_login_dialog] Failed to click outside dialog: {e}")
+        
+        utils.logger.warning("[DouYinLogin.close_login_dialog] All methods to close login dialog failed")
+        return False
+
+    async def check_and_close_login_dialog(self):
+        """
+        检查是否存在登录对话框，如果存在则关闭它
+        Check if login dialog exists and close it if found
+        """
+        utils.logger.info("[DouYinLogin.check_and_close_login_dialog] Checking for login dialog...")
+        
+        # 登录对话框的选择器
+        dialog_selectors = [
+            "xpath=//div[@id='login-panel-new']",
+            "xpath=//div[contains(@class, 'login') and contains(@class, 'modal')]",
+            "xpath=//div[contains(@class, 'login') and contains(@class, 'dialog')]",
+            "xpath=//div[contains(@class, 'login-modal')]",
+            "css=.login-panel",
+            "css=.login-modal",
+        ]
+        
+        # 检查是否存在登录对话框
+        for selector in dialog_selectors:
+            try:
+                # 等待元素出现，超时时间设为1秒
+                await self.context_page.wait_for_selector(selector, timeout=1000)
+                dialog_element = self.context_page.locator(selector)
+                
+                # 检查对话框是否可见
+                if await dialog_element.is_visible():
+                    utils.logger.info(f"[DouYinLogin.check_and_close_login_dialog] Found login dialog with selector: {selector}")
+                    # 尝试关闭对话框
+                    success = await self.close_login_dialog()
+                    if success:
+                        utils.logger.info("[DouYinLogin.check_and_close_login_dialog] Login dialog closed successfully")
+                        return True
+                    else:
+                        utils.logger.warning("[DouYinLogin.check_and_close_login_dialog] Failed to close login dialog")
+                        return False
+                        
+            except Exception as e:
+                # 如果当前选择器没找到元素，继续尝试下一个
+                continue
+        
+        utils.logger.info("[DouYinLogin.check_and_close_login_dialog] No login dialog found")
+        return True  # 没有找到登录对话框也算成功

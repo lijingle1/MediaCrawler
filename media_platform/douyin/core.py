@@ -71,6 +71,24 @@ class DouYinCrawler(AbstractCrawler):
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
             self.context_page = await self.browser_context.new_page()
             await self.context_page.goto(self.index_url)
+            
+            # 如果配置了自动关闭登录框，则尝试关闭
+            if config.AUTO_CLOSE_DOUYIN_LOGIN_DIALOG:
+                utils.logger.info("[DouYinCrawler.start] Auto close login dialog is enabled, checking for login dialog...")
+                # 等待页面加载完成
+                await asyncio.sleep(2)
+                
+                # 创建登录对象来处理登录框关闭
+                login_obj = DouYinLogin(
+                    login_type="none",  # 不进行实际登录，只用于关闭对话框
+                    login_phone="",
+                    browser_context=self.browser_context,
+                    context_page=self.context_page,
+                    cookie_str=""
+                )
+                
+                # 检查并关闭登录对话框
+                await login_obj.check_and_close_login_dialog()
 
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):
