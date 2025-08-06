@@ -99,7 +99,7 @@ class DOUYINClient(AbstractApiClient):
             response = requests.request(method, url, **kwargs)
         try:
             if response.text == "" or response.text == "blocked":
-                utils.logger.error(f"request params incrr, response.text: {response.text}")
+                utils.logger.error(f"request params incrr, url: {url}, response: {response}, response.text: {response.text}")
                 raise Exception("account blocked")
             return response.json()
         except Exception as e:
@@ -305,18 +305,39 @@ class DOUYINClient(AbstractApiClient):
         }
         return await self.get(uri, params)
 
-    async def get_all_user_aweme_posts(self, sec_user_id: str, callback: Optional[Callable] = None):
+    async def get_all_user_aweme_posts(self, sec_user_id: str, callback: Optional[Callable] = None, max_count: Optional[int] = None):
         posts_has_more = 1
         max_cursor = ""
         result = []
         while posts_has_more == 1:
+            # 如果设置了最大数量限制，检查是否已达到限制
+            if max_count is not None and len(result) >= max_count:
+                utils.logger.info(
+                    f"[DOUYINClient.get_all_user_aweme_posts] Reached max_count limit: {max_count} for sec_user_id: {sec_user_id}")
+                break
+                
             aweme_post_res = await self.get_user_aweme_posts(sec_user_id, max_cursor)
             posts_has_more = aweme_post_res.get("has_more", 0)
             max_cursor = aweme_post_res.get("max_cursor")
             aweme_list = aweme_post_res.get("aweme_list") if aweme_post_res.get("aweme_list") else []
+            
+            # 如果设置了最大数量限制，截取到限制数量
+            if max_count is not None and len(result) + len(aweme_list) > max_count:
+                remaining_count = max_count - len(result)
+                aweme_list = aweme_list[:remaining_count]
+                utils.logger.info(
+                    f"[DOUYINClient.get_all_user_aweme_posts] Truncated aweme_list to {remaining_count} items to respect max_count limit")
+            
             utils.logger.info(
                 f"[DOUYINClient.get_all_user_aweme_posts] got sec_user_id:{sec_user_id} video len : {len(aweme_list)}")
             if callback:
                 await callback(aweme_list)
             result.extend(aweme_list)
+            
+            # 如果设置了最大数量限制且已达到限制，退出循环
+            if max_count is not None and len(result) >= max_count:
+                break
+                
+        utils.logger.info(
+            f"[DOUYINClient.get_all_user_aweme_posts] Total videos collected for sec_user_id:{sec_user_id} : {len(result)}")
         return result

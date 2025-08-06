@@ -46,6 +46,8 @@ async def parse_cmd():
                         help='limit of notes/posts to crawl', default=config.CRAWLER_MAX_NOTES_COUNT)
     parser.add_argument('--headless', type=str2bool,
                         help='whether to use headless browser mode', default=True)
+    parser.add_argument('--auto_close_douyin_login_dialog', type=str2bool,
+                        help='whether to automatically close douyin login dialog', default=config.AUTO_CLOSE_DOUYIN_LOGIN_DIALOG)
 
     args = parser.parse_args()
 
@@ -62,6 +64,7 @@ async def parse_cmd():
     config.SAVE_FILE_TIMESTAMP = args.save_file_timestamp
     config.CRAWLER_MAX_NOTES_COUNT = args.crawler_max_notes_count
     config.HEADLESS = args.headless
+    config.AUTO_CLOSE_DOUYIN_LOGIN_DIALOG = args.auto_close_douyin_login_dialog
 
     # 自动适配平台 CREATOR_ID_LIST 字段
     if args.creator_id_list:

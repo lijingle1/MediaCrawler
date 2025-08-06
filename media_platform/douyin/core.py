@@ -225,15 +225,18 @@ class DouYinCrawler(AbstractCrawler):
         Get the information and videos of the specified creator
         """
         utils.logger.info("[DouYinCrawler.get_creators_and_videos] Begin get douyin creators")
+        utils.logger.info(f"[DouYinCrawler.get_creators_and_videos] Max notes count limit: {config.CRAWLER_MAX_NOTES_COUNT}")
+        
         for user_id in config.DY_CREATOR_ID_LIST:
             creator_info: Dict = await self.dy_client.get_user_info(user_id)
             if creator_info:
                 await douyin_store.save_creator(user_id, creator=creator_info)
 
-            # Get all video information of the creator
+            # Get all video information of the creator with max count limit
             all_video_list = await self.dy_client.get_all_user_aweme_posts(
                 sec_user_id=user_id,
-                callback=self.fetch_creator_video_detail
+                callback=self.fetch_creator_video_detail,
+                max_count=config.CRAWLER_MAX_NOTES_COUNT
             )
 
             video_ids = [video_item.get("aweme_id") for video_item in all_video_list]
