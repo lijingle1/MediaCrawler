@@ -170,7 +170,9 @@ cython_debug/
 package-lock.json
 **/package-lock.json
 
-*/.DS_Store
+# .DS_Store files
+.DS_Store
+**/.DS_Store
 .vscode
 /node_modules
 /server/node_modules

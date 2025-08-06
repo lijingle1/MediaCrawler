@@ -159,7 +159,7 @@ class DOUYINClient(AbstractApiClient):
             'is_filter_search': '0',
             'from_group_id': '7378810571505847586',
             'offset': offset,
-            'count': '15',
+            'count': '10',
             'need_filter_settings': '1',
             'list_type': 'multi',
             'search_id': search_id,

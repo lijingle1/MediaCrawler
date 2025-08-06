@@ -117,16 +117,19 @@ class DouYinCrawler(AbstractCrawler):
     async def search(self) -> None:
         utils.logger.info("[DouYinCrawler.search] Begin search douyin keywords")
         dy_limit_count = 10  # douyin limit page fixed value
-        if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
-            config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
+        # 不再强制修改用户设置的最大数量
+        # if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
+        #     config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
         start_page = config.START_PAGE  # start page number
+        utils.logger.info(f"[DouYinCrawler.search] Max notes count limit: {config.CRAWLER_MAX_NOTES_COUNT}")
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
             dy_search_id = ""
-            while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            # 修改循环条件：基于实际收集的数据数量而不是页数
+            while len(aweme_list) < config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
                     page += 1
@@ -134,13 +137,17 @@ class DouYinCrawler(AbstractCrawler):
                 try:
                     utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
-                                                                            offset=page * dy_limit_count - dy_limit_count,
+                                                                            offset=(page - 1) * dy_limit_count,
                                                                             publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
                                                                             search_id=dy_search_id
                                                                             )
                     if posts_res.get("data") is None or posts_res.get("data") == []:
                         utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page} is empty,{posts_res.get('data')}`")
                         break
+                    
+                    # 添加调试信息：记录API实际返回的数据量
+                    api_returned_count = len(posts_res.get("data", []))
+                    utils.logger.info(f"[DouYinCrawler.search] API returned {api_returned_count} items for page {page}")
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
                     break
@@ -151,14 +158,28 @@ class DouYinCrawler(AbstractCrawler):
                         f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
+                valid_items_count = 0
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = post_item.get("aweme_info") or \
                                            post_item.get("aweme_mix_info", {}).get("mix_items")[0]
                     except TypeError:
+                        utils.logger.debug(f"[DouYinCrawler.search] Skipped invalid post_item structure")
                         continue
-                    aweme_list.append(aweme_info.get("aweme_id", ""))
-                    await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
+                    
+                    if aweme_info and aweme_info.get("aweme_id"):
+                        aweme_list.append(aweme_info.get("aweme_id", ""))
+                        await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
+                        valid_items_count += 1
+                    else:
+                        utils.logger.debug(f"[DouYinCrawler.search] Skipped post with missing aweme_id")
+                    # 检查是否已达到最大数量限制
+                    if len(aweme_list) >= config.CRAWLER_MAX_NOTES_COUNT:
+                        utils.logger.info(f"[DouYinCrawler.search] Reached max notes count: {config.CRAWLER_MAX_NOTES_COUNT}")
+                        break
+                
+                # 记录本页处理结果
+                utils.logger.info(f"[DouYinCrawler.search] Page {page}: API returned {api_returned_count} items, processed {valid_items_count} valid items, total collected: {len(aweme_list)}")
             utils.logger.info(f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
 

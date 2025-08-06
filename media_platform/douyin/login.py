@@ -279,16 +279,7 @@ class DouYinLogin(AbstractLogin):
         
         # 常见的登录框关闭按钮选择器
         close_selectors = [
-            "xpath=//div[@id='login-panel-new']//div[contains(@class, 'close') or contains(@class, 'Close')]",  # 通用关闭按钮
-            "xpath=//div[@id='login-panel-new']//span[contains(@class, 'close') or contains(@class, 'Close')]",  # span关闭按钮
-            "xpath=//div[@id='login-panel-new']//button[contains(@class, 'close') or contains(@class, 'Close')]",  # button关闭按钮
-            "xpath=//div[@id='login-panel-new']//*[text()='×' or text()='✕' or text()='关闭']",  # 文本关闭按钮
-            "xpath=//div[contains(@class, 'login') and contains(@class, 'modal')]//div[contains(@class, 'close')]",  # 模态框关闭按钮
-            "xpath=//div[contains(@class, 'login') and contains(@class, 'dialog')]//div[contains(@class, 'close')]",  # 对话框关闭按钮
-            "xpath=//div[contains(@class, 'login-modal')]//div[contains(@class, 'close')]",  # 登录模态框关闭按钮
-            "css=.login-panel .close",  # CSS选择器
-            "css=.login-modal .close",  # CSS选择器
-            "css=[data-testid='close-button']",  # 测试ID选择器
+            "xpath=//*[@id='douyin_login_comp_flat_panel']/div/div[1]/div[2]"
         ]
         
         # 尝试点击关闭按钮
