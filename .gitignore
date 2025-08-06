@@ -166,6 +166,10 @@ cython_debug/
 /browser_data/
 /data/
 
+# package-lock.json
+package-lock.json
+**/package-lock.json
+
 */.DS_Store
 .vscode
 /node_modules
