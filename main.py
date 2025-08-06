@@ -29,7 +29,7 @@ from media_platform.zhihu import ZhihuCrawler
 class CrawlerFactory:
     CRAWLERS = {
         "xhs": XiaoHongShuCrawler,
-        "dy": DouYinCrawler,
+        "douyin": DouYinCrawler,
         "ks": KuaishouCrawler,
         "bili": BilibiliCrawler,
         "weibo": WeiboCrawler,
@@ -41,7 +41,7 @@ class CrawlerFactory:
     def create_crawler(platform: str) -> AbstractCrawler:
         crawler_class = CrawlerFactory.CRAWLERS.get(platform)
         if not crawler_class:
-            raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
+            raise ValueError("Invalid Media Platform Currently only supported xhs or douyin or ks or bili ...")
         return crawler_class()
 
 async def main():
